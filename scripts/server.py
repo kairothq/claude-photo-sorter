@@ -84,12 +84,16 @@ def open_path(path, reveal=False):
         subprocess.run(["xdg-open", os.path.dirname(path) if reveal else path])
 
 
-def pick_folder():
+def pick_folder(prompt="Choose the folder with your photos"):
+    """Native macOS folder picker, shown in front of the browser."""
     if sys.platform != "darwin":
         return None
-    r = subprocess.run(["osascript", "-e", 'POSIX path of (choose folder with prompt "Choose the folder with your photos")'],
-                       capture_output=True, text=True)
-    return r.stdout.strip() or None
+    prompt = prompt.replace('"', "'")[:120]
+    script = ('tell application (path to frontmost application as text)\n'
+              f'  POSIX path of (choose folder with prompt "{prompt}")\n'
+              'end tell')
+    r = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
+    return r.stdout.strip().rstrip("/") or None
 
 
 class H(SimpleHTTPRequestHandler):
@@ -213,7 +217,7 @@ class H(SimpleHTTPRequestHandler):
                 else:
                     raise ValueError("build the folders first")
             elif p == "/api/pick":
-                return self.send_json({"path": pick_folder()})
+                return self.send_json({"path": pick_folder(body.get("prompt") or "Choose the folder with your photos")})
             else:
                 return self.send_json({"error": "not found"}, 404)
         except Exception as e:

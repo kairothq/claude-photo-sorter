@@ -8,7 +8,7 @@ Also writes work/duplicates.jpg so you can eyeball the groups before trusting th
 import os, sys
 
 import imagehash
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 sys.path.insert(0, os.path.dirname(__file__))
 from common import DATA, THUMBS, WORK, load, save
@@ -35,11 +35,28 @@ for ids in by_sha.values():
     for x in ids[1:]:
         union(ids[0], x)
 
+byid = {r["id"]: r for r in recs}
+
+
+def pixels_differ(a, b):
+    """Screenshots of the same app look identical to a perceptual hash (dark UI, same layout),
+    so for PNGs also require almost no changed pixels: <0.4% of the preview."""
+    A = Image.open(os.path.join(THUMBS, f"{a}.jpg")).convert("L")
+    B = Image.open(os.path.join(THUMBS, f"{b}.jpg")).convert("L")
+    changed = sum(1 for p in ImageChops.difference(A, B).getdata() if p > 40)
+    return changed / (A.width * A.height) > 0.004
+
+
 hashed = [(r["id"], r["kind"], imagehash.hex_to_hash(r["phash"])) for r in recs if r.get("phash") and "error" not in r]
 for i in range(len(hashed)):
     for j in range(i + 1, len(hashed)):
-        if hashed[i][1] == hashed[j][1] and hashed[i][2] - hashed[j][2] <= 4:
-            union(hashed[i][0], hashed[j][0])
+        a, b = hashed[i], hashed[j]
+        if a[1] != b[1] or a[2] - b[2] > 4:
+            continue
+        if byid[a[0]]["ext"] == ".png" and byid[b[0]]["ext"] == ".png" and byid[a[0]]["sha256"] != byid[b[0]]["sha256"] \
+                and pixels_differ(a[0], b[0]):
+            continue
+        union(a[0], b[0])
 
 groups = {}
 for r in recs:

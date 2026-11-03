@@ -55,7 +55,7 @@ Works with other coding agents too (Codex, Cursor, Gemini CLI): they read `AGENT
 | **Show result** | Skips the animation. |
 | **Click a folder** | Browse everything in it. Click a photo to see it full size, use the arrow keys to flip through, and **Move to** to fix a wrong one. |
 | **Edit folders** | Add, rename or delete folders and describe what goes in each. |
-| **Steps** | Run every step from buttons: choose a folder, scan, find duplicates, label with Jev, build folders. Shows a live log. |
+| **Steps** | Run every step from buttons: pick your photos folder with the Finder picker, scan, find duplicates, pick where to save, build folders. Shows a live log. The **Advanced** tab has the 200-file sample and Jev. |
 | **Open sorted folder** | Opens the result in Finder. |
 
 Light, dark and system themes. Want to see it without your photos? Run `./start.sh --demo`.
