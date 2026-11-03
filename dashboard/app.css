@@ -71,6 +71,8 @@ input, textarea, select { font: 13px var(--font); }
 .onboard { max-width: 300px; padding: 22px; border-radius: var(--r-lg); border: 1px solid var(--border); background: var(--surface); box-shadow: var(--shadow-lift); }
 .onboard h2 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
 .onboard p { margin: 0 0 14px; color: var(--ink-3); line-height: 1.5; }
+.onboard .note { margin: 10px 0 0; }
+.onboard a { color: var(--accent); }
 
 #sphere, #fly { position: fixed; inset: 0; pointer-events: none; }
 #sphere { z-index: 2; }
