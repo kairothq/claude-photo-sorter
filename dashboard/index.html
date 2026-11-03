@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sorting my camera roll</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='7' fill='%23c2412f'/%3E%3Crect x='6' y='6' width='12' height='12' rx='2' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="components.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<header class="topbar">
+  <button class="mx-logo" id="logo" title="Photo sorter"><i data-icon="images"></i>photo sorter</button>
+  <span class="mx-pill" id="pill"><span class="dot"></span><span id="pilltext">Ready</span></span>
+  <span class="spacer"></span>
+  <div class="mx-seg" id="theme" role="group" aria-label="Theme">
+    <button data-t="light">Light</button><button data-t="dark">Dark</button><button data-t="system">System</button>
+  </div>
+  <button class="mx-btn" id="btnSteps" aria-label="Steps"><i data-icon="list"></i><span class="lbl">Steps</span></button>
+  <button class="mx-btn solid" id="go"><i data-icon="play"></i><span id="golabel">Sort with Claude</span></button>
+</header>
+
+<main class="app" id="app">
+  <div class="mx-title">
+    <h1>Sorting my camera roll</h1>
+    <span class="mx-count" id="total">0</span>
+    <span class="mx-sub" id="source"></span>
+    <span class="spacer"></span>
+    <button class="mx-btn small ghost" id="btnShow" title="Skip the animation">Show result</button>
+    <button class="mx-btn small" id="btnFolders"><i data-icon="pencil"></i>Edit folders</button>
+    <button class="mx-btn small" id="btnOpen"><i data-icon="folder"></i>Open sorted folder</button>
+  </div>
+
+  <section class="mx-kpis" style="--n:6">
+    <div class="mx-kpi"><h3>Files checked</h3><b id="k-checked">0</b><small id="k-checked-s">photos &amp; videos</small></div>
+    <div class="mx-kpi"><h3>Photos sorted</h3><b id="k-photos">0</b><small>&nbsp;</small></div>
+    <div class="mx-kpi"><h3>Videos sorted</h3><b id="k-videos">0</b><small>&nbsp;</small></div>
+    <div class="mx-kpi"><h3>Folders made</h3><b><span id="k-folders">0</span><span class="of">/<span id="k-ftotal">0</span></span></b><small>&nbsp;</small></div>
+    <div class="mx-kpi"><h3>Duplicates</h3><b id="k-dupes">0</b><small>moved to review</small></div>
+    <div class="mx-kpi"><h3>Space saved</h3><b id="k-saved">0 MB</b><small>if you delete them</small></div>
+    <div class="progress"><i id="bar"></i></div>
+  </section>
+
+  <section class="board">
+    <div class="col"><div class="col-h"><span>Photos</span><em id="pcount">0</em></div><div class="cards" id="photos"></div></div>
+    <div class="stage" id="stage">
+      <div class="center" id="done">
+        <div class="check"><i data-icon="check"></i></div>
+        <div class="big"><span id="bigN">0</span> sorted</div>
+        <div class="mx-sub">into <b id="bigF">0 folders</b> with one prompt</div>
+        <div class="chips"><span class="chip" id="chipD"></span><span class="chip" id="chipS"></span></div>
+      </div>
+      <div class="center empty" id="empty"></div>
+    </div>
+    <div class="col right"><div class="col-h"><span>Videos</span><em id="vcount">0</em></div><div class="cards" id="videos"></div></div>
+  </section>
+</main>
+
+<div id="sphere"></div>
+<div id="fly"></div>
+<canvas id="confetti"></canvas>
+<div id="overlay"></div>
+<div class="toast" id="toast" role="status"></div>
+<script src="app.js"></script>
+</body>
+</html>

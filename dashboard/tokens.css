@@ -1,0 +1,151 @@
+/* Matic theme: cool neutral greys, one slate accent, system font. Loaded after
+   styles.css; the tone scale below re-colours every existing page. */
+:root {
+  color-scheme: dark;
+  --tone-0: rgb(8 8 10);
+  --tone-8: rgb(9 9 12);
+  --tone-16: rgb(11 11 13);
+  --tone-24: rgb(12 12 15);
+  --tone-32: rgb(19 19 24);
+  --tone-40: rgb(23 23 29);
+  --tone-48: rgb(31 31 38);
+  --tone-56: rgb(38 38 46);
+  --tone-64: rgb(45 45 55);
+  --tone-72: rgb(52 52 63);
+  --tone-80: rgb(60 60 70);
+  --tone-88: rgb(67 67 78);
+  --tone-96: rgb(74 74 86);
+  --tone-104: rgb(87 87 99);
+  --tone-112: rgb(99 99 111);
+  --tone-120: rgb(112 112 124);
+  --tone-128: rgb(120 120 132);
+  --tone-136: rgb(129 129 141);
+  --tone-144: rgb(137 137 149);
+  --tone-152: rgb(146 146 158);
+  --tone-160: rgb(154 154 166);
+  --tone-168: rgb(159 159 171);
+  --tone-176: rgb(164 164 176);
+  --tone-184: rgb(170 170 181);
+  --tone-192: rgb(175 175 186);
+  --tone-200: rgb(180 180 191);
+  --tone-208: rgb(193 193 203);
+  --tone-216: rgb(206 206 214);
+  --tone-224: rgb(219 219 226);
+  --tone-232: rgb(232 232 238);
+  --tone-240: rgb(237 237 242);
+  --tone-248: rgb(242 242 246);
+  --tone-255: rgb(246 246 249);
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --tone-0: rgb(255 255 255);
+  --tone-8: rgb(255 255 255);
+  --tone-16: rgb(255 255 255);
+  --tone-24: rgb(255 255 255);
+  --tone-32: rgb(255 255 255);
+  --tone-40: rgb(247 247 248);
+  --tone-48: rgb(236 236 238);
+  --tone-56: rgb(228 228 231);
+  --tone-64: rgb(217 217 222);
+  --tone-72: rgb(204 204 210);
+  --tone-80: rgb(192 192 198);
+  --tone-88: rgb(179 179 185);
+  --tone-96: rgb(166 166 173);
+  --tone-104: rgb(148 148 153);
+  --tone-112: rgb(130 130 132);
+  --tone-120: rgb(112 112 112);
+  --tone-128: rgb(108 108 110);
+  --tone-136: rgb(105 105 108);
+  --tone-144: rgb(101 101 106);
+  --tone-152: rgb(98 98 104);
+  --tone-160: rgb(94 94 102);
+  --tone-168: rgb(89 89 97);
+  --tone-176: rgb(84 84 92);
+  --tone-184: rgb(79 79 86);
+  --tone-192: rgb(74 74 81);
+  --tone-200: rgb(69 69 76);
+  --tone-208: rgb(58 58 65);
+  --tone-216: rgb(48 48 54);
+  --tone-224: rgb(38 38 42);
+  --tone-232: rgb(27 27 31);
+  --tone-240: rgb(22 22 26);
+  --tone-248: rgb(17 17 21);
+  --tone-255: rgb(13 13 16);
+}
+
+/* Roles. Everything new reads these; old pages read the tone scale above. */
+:root {
+  --paper: var(--tone-24);
+  --surface: var(--tone-32);
+  --hover: var(--tone-40);
+  --hair: var(--tone-48);
+  --border: var(--tone-56);
+  --chip-border: var(--tone-64);
+  --track: var(--tone-48);
+  --ink: var(--tone-232);
+  --ink-2: var(--tone-200);
+  --ink-3: var(--tone-160);
+  --faint: #8f8f9b;
+  --accent: #94a7c4;
+  --accent-tint: #20283a;
+  --brand: #f0705c;
+  --brand-solid: #c2412f;
+  --brand-tint: #2a1714;
+  --green: #5fb387;
+  --green-tint: #17251d;
+  --lime: var(--accent);
+  --shadow: 0 1px 2px #0006, 0 8px 24px -16px #0009;
+  --shadow-lift: 0 1px 2px #0006, 0 6px 16px -6px #00000073, 0 24px 50px -26px #0009;
+  --shadow-drawer: -8px 0 24px #0000004d;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Segoe UI", system-ui, sans-serif;
+  --ease: cubic-bezier(0.22, 0.61, 0.2, 1);
+  --ease-slide: cubic-bezier(0.32, 0.72, 0.24, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 300ms;
+  --dur-4: 420ms;
+  --stagger: 35ms;
+  --r-sm: 8px;
+  --r: 12px;
+  --r-lg: 14px;
+  --z-sticky: 10;
+  --z-nav: 20;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
+  --top: 56px;
+  --rail: 52px;
+  --rail-open: 224px;
+  font-family: var(--font);
+  --serif: var(--font);
+}
+:root[data-theme="light"] {
+  --faint: #6a6a70;
+  --accent: #334155;
+  --accent-tint: #f1f5f9;
+  --brand: #b03a2a;
+  --brand-solid: #c2412f;
+  --brand-tint: #fbeae7;
+  --green: #3f7f5a;
+  --green-tint: #e9efe8;
+  --shadow: 0 1px 2px #14141408, 0 4px 14px #14141412;
+  --shadow-lift: 0 2px 4px #1414140f, 0 10px 26px #1414141a;
+  --shadow-drawer: -8px 0 24px #1414141f;
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+}
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+button, a { transition: background var(--dur-1) ease, color var(--dur-1) ease, border-color var(--dur-1) ease; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.global-search:focus-within, .select-wrap:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+@keyframes mx-rise { from { opacity: 0; transform: translateY(8px); } }
+@keyframes mx-fade { from { opacity: 0; } }
+@keyframes mx-draw { to { stroke-dashoffset: 0; } }
+.mx-rise { animation: mx-rise var(--dur-4) var(--ease) backwards; animation-delay: calc(min(var(--i, 0), 12) * var(--stagger)); }
+

@@ -1,0 +1,16 @@
+[
+ {"key": "selfies",     "kind": "photo", "label": "Selfies",              "emoji": "🤳", "rule": "front-camera and mirror selfies of one person"},
+ {"key": "people",      "kind": "photo", "label": "People & family",      "emoji": "👨‍👩‍👧", "rule": "photos of other people, groups, family, friends, portraits taken by someone else"},
+ {"key": "pets",        "kind": "photo", "label": "Pets & animals",       "emoji": "🐶", "rule": "dogs, cats, any animal is the main subject"},
+ {"key": "food",        "kind": "photo", "label": "Food & drinks",        "emoji": "🍜", "rule": "meals, snacks, drinks, cafes, the food is the subject"},
+ {"key": "travel",      "kind": "photo", "label": "Travel & nature",      "emoji": "🏔️", "rule": "mountains, beaches, landscapes, monuments, trips, sky and sunsets"},
+ {"key": "city",        "kind": "photo", "label": "City & nights out",    "emoji": "🌃", "rule": "streets, buildings, malls, cars, concerts, events, night city"},
+ {"key": "home",        "kind": "photo", "label": "Home & everyday",      "emoji": "🏠", "rule": "rooms, desk setups, objects, shopping, products, anything everyday"},
+ {"key": "docs",        "kind": "photo", "label": "Documents & receipts", "emoji": "🧾", "rule": "photos of paper (IDs, bills, notes, whiteboards) and screenshots of payments, bookings, tickets, orders"},
+ {"key": "memes",       "kind": "photo", "label": "Memes & saved posts",  "emoji": "💡", "rule": "screenshots of other people's posts, reels, tweets, articles, memes, ideas saved for later"},
+ {"key": "screenshots", "kind": "photo", "label": "Other screenshots",    "emoji": "📱", "rule": "any other screenshot: chats, apps, settings, maps, emails"},
+ {"key": "vtalk",       "kind": "video", "label": "Talking & selfie videos", "emoji": "🎙️", "rule": "a person talking to the camera, vlogs, selfie videos"},
+ {"key": "vtravel",     "kind": "video", "label": "Travel clips",         "emoji": "🚗", "rule": "trips, landscapes, roads, outdoor scenery"},
+ {"key": "vscreen",     "kind": "video", "label": "Screen recordings",    "emoji": "🖥️", "rule": "recordings of a phone or computer screen"},
+ {"key": "vclips",      "kind": "video", "label": "Everyday clips",       "emoji": "🎬", "rule": "every other video: friends, family, pets, food, events"}
+]
