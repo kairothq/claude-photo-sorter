@@ -87,6 +87,8 @@ with ThreadPoolExecutor(6) as ex:
     for n, (i, res) in enumerate(ex.map(ask, todo), 1):
         done[str(i)] = res
         tokens += res.get("tokens", 0)
+        if n % 10 == 0 or n == len(todo):
+            print(f"PROGRESS {n} {len(todo)}", flush=True)
         if n % 50 == 0 or n == len(todo):
             save(JEV_OUT, done)
             print(f"  {n}/{len(todo)}  tokens so far {tokens:,}", flush=True)

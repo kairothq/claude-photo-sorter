@@ -31,9 +31,11 @@ if not os.path.isdir(src):
     sys.exit(f"Folder not found: {src}")
 
 HAS_FFMPEG = shutil.which("ffmpeg") and shutil.which("ffprobe")
-if os.path.isdir(THUMBS):
-    shutil.rmtree(THUMBS)
-os.makedirs(THUMBS)
+MINI = os.path.join(DATA, "mini")  # 72px copies for the animation, so hundreds can move smoothly
+for d in (THUMBS, MINI):
+    if os.path.isdir(d):
+        shutil.rmtree(d)
+    os.makedirs(d)
 
 
 def sidecar(path):
@@ -101,9 +103,11 @@ def process(args):
                 square(ImageOps.exif_transpose(im)).save(thumb, quality=80)
         with Image.open(thumb) as t:
             rec["phash"] = str(imagehash.phash(t))
+            t.convert("RGB").resize((72, 72)).save(os.path.join(MINI, f"{i}.jpg"), quality=72)
     except Exception as e:  # unreadable file: keep it in the inventory, flag it
         rec["error"] = str(e)[:200]
         Image.new("RGB", (256, 256), (230, 228, 222)).save(thumb)
+        Image.new("RGB", (72, 72), (230, 228, 222)).save(os.path.join(MINI, f"{i}.jpg"))
     sc = sidecar(path)
     if sc:
         try:
@@ -131,6 +135,8 @@ with ThreadPoolExecutor(8) as ex:
     recs = []
     for n, r in enumerate(ex.map(process, enumerate(files)), 1):
         recs.append(r)
+        if n % 20 == 0 or n == len(files):
+            print(f"PROGRESS {n} {len(files)}", flush=True)
         if n % 200 == 0:
             print(f"  {n}/{len(files)}", flush=True)
 

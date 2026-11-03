@@ -1,6 +1,7 @@
 # your photos' data never goes in git
 dashboard/data/
 dashboard/demo/
+dashboard/peek/
 work/
 .env
 .venv/

@@ -15,6 +15,7 @@ cats = load(CATEGORIES)
 if os.path.isdir(OUT):
     shutil.rmtree(OUT)
 os.makedirs(os.path.join(OUT, "thumbs"))
+os.makedirs(os.path.join(OUT, "mini"))
 
 WEIGHTS = {"selfies": 110, "people": 95, "pets": 40, "food": 60, "travel": 85, "city": 70, "home": 120,
            "docs": 55, "memes": 150, "screenshots": 140, "vtalk": 45, "vtravel": 25, "vscreen": 12, "vclips": 50}
@@ -106,6 +107,7 @@ for c in cats:
     for _ in range(WEIGHTS.get(c["key"], 40)):
         im = draw(c["key"])
         im.save(os.path.join(OUT, "thumbs", f"{i}.jpg"), quality=78)
+        im.resize((72, 72)).save(os.path.join(OUT, "mini", f"{i}.jpg"), quality=72)
         video = c["kind"] == "video"
         inv.append({"id": i, "name": f"IMG_{4000 + i}.{'MOV' if video else 'JPG'}", "kind": c["kind"],
                     "ext": ".mov" if video else ".jpg", "bytes": rnd.randint(20, 90) * 10**6 if video else rnd.randint(18, 60) * 10**5})

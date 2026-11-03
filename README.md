@@ -1,115 +1,98 @@
 # Claude photo sorter
 
-Point Claude at your camera roll. It looks at every photo and video, sorts them into folders, finds your duplicates, and plays it all back on a live dashboard you can screen-record.
+Point Claude at your camera roll. It looks at every photo and video, sorts them into folders, finds your duplicates, and you watch it happen on a live dashboard on your own laptop.
 
 ![The dashboard sorting a camera roll](docs/preview.gif)
 
 <sub>The demo above uses drawn placeholder images, not real photos.</sub>
 
-- **Sorts photos and videos** into folders like Selfies, Food, Travel, Screenshots, Talking heads, Screen recordings. You choose the folders, or let Claude suggest ones that fit your library.
-- **Finds duplicates**: identical copies, burst shots and re-saved screenshots go to a `_Review` folder with a list of what was kept.
+- **Sorts photos and videos** into folders like Selfies, Food, Travel, Screenshots, Talking heads and Screen recordings. Use the standard folders or make your own.
+- **Finds duplicates**: identical copies, burst shots and re-saved screenshots go to a `_Review` folder, with a list of which copy was kept.
 - **Never touches your originals.** It only reads them and makes sorted copies. On a Mac the copies take no extra space.
-- **Runs on your computer.** Your photos are not uploaded anywhere (unless you choose the optional Jev model, which only gets small previews).
-- **A dashboard on localhost** with the animation, folder editing, a photo browser and one-click Finder links.
+- **Runs on your computer.** Your photos are not uploaded anywhere.
 
-## Never used Claude Code? Start here
+## Start here (no coding needed)
 
-You need a Mac (Windows and Linux work too, with fewer conveniences), a Claude plan, and about 10 minutes.
+You need a Mac and a Claude plan. Windows and Linux work too, with a few less conveniences.
 
-**1. Install Claude Code.** Follow the one-line install at [claude.com/claude-code](https://claude.com/claude-code), then open the **Terminal** app (press `⌘ Space`, type *Terminal*, press Enter).
+**1. Install Claude Code** from [claude.com/claude-code](https://claude.com/claude-code). Then open the **Terminal** app (press `⌘ Space`, type *Terminal*, press Enter), type `claude` and press Enter.
 
-**2. Download this project.** Paste these lines into Terminal and press Enter:
-
-```bash
-cd ~/Desktop
-git clone https://github.com/kairothq/claude-photo-sorter.git
-cd claude-photo-sorter
-claude
-```
-
-<sub>No git? Click the green **Code** button on this page, choose **Download ZIP**, unzip it on your Desktop, then type `cd ~/Desktop/claude-photo-sorter-main` and `claude` in Terminal.</sub>
-
-**3. Say this to Claude:**
+**2. Paste this to Claude:**
 
 ```
-sort my photos
+Set up and open https://github.com/kairothq/claude-photo-sorter
 ```
 
-That's it. Claude reads the instructions in this repo and walks you through the rest, asking one question at a time:
+Claude downloads it, sets it up and opens the dashboard in your browser.
 
-1. Shows you a demo first, if you want.
-2. Asks where your photos are and helps you export them from Google Photos or Apple Photos.
-3. Scans them and finds the duplicates.
-4. **Asks how you want them sorted**: the standard folders, folders it suggests after looking at your photos, or your own list.
-5. Labels every photo and video.
-6. Builds the sorted folders next to your originals.
-7. Opens the dashboard at `http://127.0.0.1:8765`.
+**3. In the dashboard:**
 
-Works with other coding agents too (Codex, Cursor, Gemini CLI): they read `AGENTS.md`.
+1. **Choose folder**: pick the folder with your photos (a Google Photos or Apple Photos export, or any folder).
+2. Pick where the sorted copies should go. The default is right next to your photos.
+3. Press **Start sorting**.
+
+It shows how long it usually takes, then sorts on its own while you watch every photo fly into its folder. About 4 minutes for 1,000 photos.
+
+<details>
+<summary>Don't have your photos on your computer yet?</summary>
+
+- **Google Photos:** go to [takeout.google.com](https://takeout.google.com), select only Google Photos, download, and unzip everything into one folder.
+- **iPhone or Apple Photos:** in Photos on your Mac, select all, then File > Export > Export Unmodified Originals, into a new folder.
+</details>
+
+## Using it again
+
+The dashboard lives at **http://127.0.0.1:8765** while it's running. To open it again later, either:
+
+- double-click **Open Photo Sorter.command** in the `claude-photo-sorter` folder (it's in your home folder), or
+- tell Claude "open my photo sorter".
+
+Press **New sort** to sort a different folder, or send the copies somewhere else.
 
 ## The dashboard
 
 | | |
 |---|---|
-| **Sort with Claude** | Plays the sort: every thumbnail flies from the sphere into its folder. Press space to start, `R` to reset. Add `?d=20` to the address for a slower take, `?auto` to start by itself. |
-| **Show result** | Skips the animation. |
-| **Click a folder** | Browse everything in it. Click a photo to see it full size, use the arrow keys to flip through, and **Move to** to fix a wrong one. |
-| **Edit folders** | Add, rename or delete folders and describe what goes in each. |
-| **Steps** | Run every step from buttons: pick your photos folder with the Finder picker, scan, find duplicates, pick where to save, build folders. Shows a live log. The **Advanced** tab has the 200-file sample and Jev. |
+| **Sort with Claude** | Before sorting: asks for anything missing, then starts. After sorting: replays the animation (good for screen recording). Add `?d=20` to the address for a slower take. |
+| **New sort** | Pick a new photos folder and a new place for the copies. |
+| **Advanced** (in the setup card) | See the folders that will be made, remove any, or press **+** to add your own. Choose Claude or Jev. Try 200 photos first. |
+| **Click a folder** | Browse everything in it. Click a photo to see it full size, flip with the arrow keys, and **Move to** another folder if it's wrong. |
+| **Edit folders** | Rename folders and describe what goes in each. |
 | **Open sorted folder** | Opens the result in Finder. |
+| ☀ / ☾ | Light or dark. |
 
-Light, dark and system themes. Want to see it without your photos? Run `./start.sh --demo`.
+Want a look without your own photos? Run `./start.sh --demo`.
 
-## Choosing your folders
+## How it works
 
-Folders live in `categories.json`. Edit them on the dashboard, ask Claude, or change the file:
+1. **Scan**: makes a small preview of every file and a fingerprint to spot copies. Your originals are only read.
+2. **Duplicates**: compares fingerprints, plus a pixel check for screenshots so similar app screens aren't mistaken for copies.
+3. **Labels**: runs Claude Code in the background (`claude -p`), four at a time, each looking at about 90 previews and picking a folder for each. This uses your Claude plan and needs no API key.
+4. **Folders**: copies each file into its folder, and duplicates into `_Review/duplicates`. Writes `sorted.csv` and `duplicates.csv`.
 
-```json
-{"key": "food", "kind": "photo", "label": "Food & drinks", "emoji": "🍜", "rule": "meals, snacks, drinks, cafes, the food is the subject"}
-```
+### Claude or Jev?
 
-The `rule` is what the model reads, so write it like you'd explain it to a friend. `kind` is `photo` or `video`. Videos only go into video folders.
-
-## Claude or Jev?
-
-| | Claude | Jev (optional) |
+| | Claude (default) | Jev (Advanced, optional) |
 |---|---|---|
-| What | Claude Code looks at contact sheets of 30 previews at a time | [TypeSafe's](https://typesafe.ai) Jev 1.14 image model, one question per file |
-| Cost | Included in your Claude plan | Billed per file, about 980 tokens each. The dashboard shows an estimate and asks first |
-| Speed | About a minute per 1,000 files with parallel agents | About 75 seconds per 1,000 files |
+| What | Claude Code reads contact sheets of 30 previews | [TypeSafe's](https://typesafe.ai) Jev 1.14 image model, one question per file |
+| Cost | Included in your Claude plan | Billed per file, about 980 tokens each. Shows an estimate and asks first |
+| Speed | About a minute per 1,000 files | About 75 seconds per 1,000 files |
 | Setup | Nothing | Put `JEV_KEY=your-key` in a `.env` file in this folder |
-
-Use both and the tool keeps Jev's answer when it's at least 70% sure, otherwise Claude's. On a test library of 1,136 files, the two agreed on 78% of files, and on 89% where Jev was confident.
 
 ## Privacy
 
-- The dashboard server only listens on `127.0.0.1`, so nothing on your network can reach it.
-- Previews, labels and the file list stay in `dashboard/data/` and `work/`, which git ignores.
-- With Claude, previews are seen by Claude the same way as anything else you share in Claude Code.
-- With Jev, a 280px preview of each file is sent to TypeSafe's API. Originals never leave your computer.
+- The dashboard only listens on `127.0.0.1`, so nothing else on your network can reach it.
+- Previews, labels and the file list stay in `dashboard/data/` and `work/`, which are never committed.
+- With Claude, the small previews are read by Claude Code the same way as anything else you share with it. With Jev, a 280px preview of each file goes to TypeSafe's API. Originals never leave your computer.
 
 ## Running it by hand
 
 ```bash
-./setup.sh                                                   # once
-.venv/bin/python scripts/scan.py "~/Pictures/Export" --limit 200
-.venv/bin/python scripts/dupes.py
-.venv/bin/python scripts/sheets.py                           # contact sheets for Claude
-.venv/bin/python scripts/label_jev.py --estimate             # or label with Jev
-.venv/bin/python scripts/apply.py "~/Pictures/Export (sorted)"
-./start.sh                                                   # http://127.0.0.1:8765
+./setup.sh          # once: Python packages into .venv/
+./start.sh          # opens http://127.0.0.1:8765
 ```
 
-Needs Python 3.9+ and, for video previews, ffmpeg (`brew install ffmpeg`).
-
-## What's inside
-
-```
-CLAUDE.md          step-by-step instructions the agent follows
-categories.json    your folders
-scripts/           scan, duplicates, contact sheets, Jev, build folders, the local server, demo data
-dashboard/         the localhost app (plain HTML, CSS and JS, no build step)
-```
+Every step is also a script in `scripts/` (`scan.py`, `dupes.py`, `label_claude.py`, `label_jev.py`, `apply.py`). Agents read `CLAUDE.md` (or `AGENTS.md`) for the full playbook. Needs Python 3.9+, and ffmpeg for video previews (`brew install ffmpeg`).
 
 ## License
 

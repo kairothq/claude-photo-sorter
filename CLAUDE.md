@@ -1,115 +1,64 @@
 # Photo sorter: instructions for the agent
 
-You are helping someone sort their camera roll into folders and find duplicates, then show it all on a local dashboard. Assume they have never used Claude Code or a terminal before. Be warm, brief, and do the technical work yourself.
+This repo sorts a camera roll into folders, finds duplicates, and shows it all on a local dashboard. The person you're helping has probably never used Claude Code or a terminal. Do the technical work yourself, keep messages short, and use plain words ("folder", not "directory").
 
 ## Ground rules (never break these)
 
-1. **Never move, rename or delete the user's original photos.** The scripts only read them and make copies. If the user asks you to delete duplicates, show them `duplicates.csv` and let them do it themselves.
-2. **Ask before anything that costs money.** Jev (TypeSafe) is billed per file. Run `label_jev.py --estimate` first and show the number of files and tokens, then wait for a yes.
-3. **Keep their photos private.** Do not upload photos anywhere except the Jev API (only if they chose it), and never commit anything in `dashboard/data/`, `work/` or `.env`.
-4. **Use plain words.** Say "folder", not "directory". Explain each step in one sentence before running it. Keep messages short.
-5. One question at a time. When you ask, give numbered options so they can just reply with a number.
+1. **Never move, rename or delete the user's original photos.** The tool only reads them and makes sorted copies. If they want duplicates deleted, show them `duplicates.csv` and let them do it.
+2. **Ask before anything that costs money.** Jev (TypeSafe) is billed per file. Run `label_jev.py --estimate`, show the files and tokens, and wait for a yes.
+3. **Keep their photos private.** Never commit anything in `dashboard/data/`, `dashboard/peek/`, `work/` or `.env`.
+4. One question at a time, with numbered options they can answer with a number.
 
-## Commands
+## When someone gives you this repo's link (the usual case)
 
-All commands run from this folder. Use `.venv/bin/python` (created by `./setup.sh`).
+They pasted something like "set up https://github.com/kairothq/claude-photo-sorter". Do this without asking:
+
+1. **Download it.** If you're not already inside this repo: `git clone https://github.com/kairothq/claude-photo-sorter.git ~/claude-photo-sorter` (if that folder exists, `git -C ~/claude-photo-sorter pull` instead), then work from that folder.
+2. **Set up.** Run `./setup.sh`. If Python is missing, ask them to run `xcode-select --install` and wait. If ffmpeg is missing and `brew` exists, offer `brew install ffmpeg` (videos just get grey previews without it).
+3. **Open the dashboard.** Run `./start.sh` in the background (it keeps running and opens the browser at http://127.0.0.1:8765).
+4. **Tell them, in about three lines:**
+   - The dashboard is open in their browser.
+   - Click **Choose folder** and pick their photos (a Google Takeout or Apple Photos export, or any folder), then pick where the sorted copies go, then **Start sorting**.
+   - It runs by itself and shows progress. Folders can be changed under **Advanced**. To open it again later: double-click `Open Photo Sorter.command` in `~/claude-photo-sorter`, or ask you to "open my photo sorter".
+5. Stay available. If they ask questions, answer from what you see in `dashboard/data/` and the server's `/api/state`.
+
+If they don't have an export yet, explain:
+- **Google Photos:** takeout.google.com, select only Google Photos, download, unzip into one folder.
+- **iPhone / Apple Photos:** in Photos on the Mac, select all, File > Export > Export Unmodified Originals, into a new folder.
+Never read `Photos Library.photoslibrary` directly.
+
+## What the dashboard does by itself
+
+**Start sorting** runs everything in order and shows live progress, a timer and a time estimate:
+
+1. Scan: inventory, sha256, 256px previews plus 72px copies for the animation (skipped if the same folder was already scanned).
+2. Duplicates: identical files and look-alikes (bursts, re-saved screenshots).
+3. Labels: `scripts/label_claude.py` runs `claude -p` in the background, 4 at a time, about 90 files per call, using the person's own Claude plan. Under **Advanced** they can pick Jev instead.
+4. Build folders: copies into `<their folder> (sorted)` or wherever they chose.
+
+Photos fly into their folders as labels come in. After sorting: **Sort with Claude** replays the animation (good for screen recording, `?d=20` makes it slower), **New sort** picks new folders, clicking a folder browses it, and a photo can be moved to another folder from the full-size view.
+
+## If they'd rather do it in this chat
 
 | Step | Command |
 |---|---|
-| Setup (once) | `./setup.sh` |
 | Scan | `.venv/bin/python scripts/scan.py "<photos folder>" [--limit 200]` |
-| Duplicates | `.venv/bin/python scripts/dupes.py` (then look at `work/duplicates.jpg`) |
-| Sample sheets | `.venv/bin/python scripts/sheets.py --sample` (3 sheets in `work/sample/`) |
-| All sheets | `.venv/bin/python scripts/sheets.py` (30 files per sheet in `work/sheets/`) |
-| Jev cost | `.venv/bin/python scripts/label_jev.py --estimate` |
-| Jev labels | `.venv/bin/python scripts/label_jev.py` |
+| Duplicates | `.venv/bin/python scripts/dupes.py` (check `work/duplicates.jpg`) |
+| Sample sheets | `.venv/bin/python scripts/sheets.py --sample` (look at `work/sample/` to suggest folders) |
+| Labels (Claude) | `.venv/bin/python scripts/label_claude.py` |
+| Labels (Jev, paid) | `.venv/bin/python scripts/label_jev.py --estimate`, then without `--estimate` |
 | Build folders | `.venv/bin/python scripts/apply.py "<output folder>"` |
-| Dashboard | `./start.sh` (run in the background, it keeps running) |
-| Demo | `./start.sh --demo` |
 
-## The flow
+The open dashboard refreshes itself when these run.
 
-When the user says anything like "sort my photos", "start", "help", or just opens this folder, follow these steps in order.
+**Choosing folders.** Folders live in `categories.json` (`key`, `kind` photo or video, `label`, `emoji`, `rule`). The `rule` is what the model reads. Offer: 1) the standard folders, 2) folders you suggest after looking at `work/sample/` (a creator gets "Content analytics" and "Talking heads", a parent gets "Kids" and "School"), or 3) their own list. Keep at least one photo and one video folder, and make the last folder of each kind a catch-all.
 
-### 1. Welcome and setup
-
-- Say in two lines what will happen: you will look at every photo and video, sort them into folders, find duplicates, and show a live dashboard. Originals are never touched.
-- Run `./setup.sh`. If Python is missing, tell them to run `xcode-select --install` (Mac) and wait. If ffmpeg is missing, offer `brew install ffmpeg` (only if `brew` exists), and explain that without it videos just get grey previews.
-- Offer the demo: "Want to see what it looks like first? I can open a demo with fake photos." If yes, run `./start.sh --demo` in the background and give them the link `http://127.0.0.1:8765/?demo`.
-
-### 2. Find their photos
-
-Ask where the photos are, with options:
-
-1. A Google Photos export (Google Takeout). Tell them: takeout.google.com, choose only Google Photos, download, and unzip into one folder.
-2. An Apple Photos export. Tell them: in Photos, select all, File > Export > Export Unmodified Originals, into a new folder.
-3. A folder that already has photos (Downloads, Desktop, a phone backup).
-4. They are not sure: look in `~/Pictures`, `~/Downloads` and `~/Desktop` for folders with many images, and suggest the biggest ones.
-
-Do not read the Photos library package (`Photos Library.photoslibrary`) directly. Ask them to export instead.
-
-Once you have the path, count the files and their total size (`find` + `du`) and tell them. If there are more than 1,000 files, suggest trying 200 first with `--limit 200`.
-
-### 3. Scan and find duplicates
-
-Run the scan, then `dupes.py`. Look at `work/duplicates.jpg` yourself. If a group is clearly not a duplicate (different photos that only look alike), say so. Report in one line: how many files, how many videos, how many duplicate groups, and the space they could free.
-
-### 4. Choose the folders (always ask)
-
-Run `sheets.py --sample` and look at the 3 sample sheets in `work/sample/`. Then ask:
-
-> How do you want them sorted?
-> 1. Use the standard folders (selfies, people, food, travel, screenshots...)
-> 2. Let me suggest folders that fit your photos (I've looked at a sample)
-> 3. You tell me your own folders
-
-- For 1: show the folder names from `categories.json` as a short list.
-- For 2: propose 8 to 14 photo folders and 2 to 5 video folders that fit what you saw (for example, a creator gets "Content analytics" and "Talking heads"; a parent gets "Kids" and "School"). Show the list and ask for changes.
-- For 3: take their list, add a one-line rule to each, and confirm.
-
-Write the final list to `categories.json`. Each folder needs `key` (short, lowercase, unique), `kind` (`photo` or `video`), `label`, `emoji` and `rule` (one plain sentence about what goes in it; the model reads this). Keep at least one photo folder and one video folder, and make the last folder of each kind a catch-all ("Other screenshots", "Everyday clips"), because unlabelled files fall back to it.
-
-Tell them they can also add, rename or delete folders later with **Edit folders** on the dashboard.
-
-### 5. Label every file
-
-Ask which to use:
-
-1. **Claude (you)**: free with their Claude plan, no key needed.
-2. **Jev**: TypeSafe's image model, fast, billed per file. Needs `JEV_KEY=...` in a `.env` file here. Run `--estimate`, show files and tokens, and get a yes before running.
-3. **Both**: Claude first, then Jev. `apply.py` uses Jev's answer when it is at least 70% confident, otherwise Claude's.
-
-**How to label with Claude:**
-
-1. Run `sheets.py`. Each sheet in `work/sheets/` shows up to 30 previews, each tagged with its id. Tags with `VIDEO` are videos and must get a video folder; everything else is a photo and must get a photo folder. `PNG` usually means a screenshot.
-2. If you can start subagents, split the sheets into 4 groups and label them in parallel. Give each subagent the path to `categories.json` and its sheet paths, and tell it to write `work/labels/<letter>.json`. Otherwise view the sheets yourself, about 10 at a time, writing `work/labels/batch_NN.json` after each group.
-3. Each labels file is a JSON object of id to folder key: `{"0": "selfies", "1": "food"}`. Label every id you see. Use only keys from `categories.json`.
-4. Check that every id has a label: compare the ids in `dashboard/data/inventory.json` with all files in `work/labels/`.
-
-### 6. Build the folders
-
-Suggest the output folder: next to their photos, named `<their folder> (sorted)`. It must not be inside the photos folder. Run `apply.py` and read the counts out as a short list. Mention that `_Review/duplicates/` holds the extra copies, and `duplicates.csv` says which copy was kept.
-
-On a Mac with both folders on the same disk, the copies are APFS clones and take no extra space. Otherwise they are real copies, so check free space first (`df -h`) and warn if it is tight.
-
-### 7. Show the dashboard
-
-Run `./start.sh` in the background and give them `http://127.0.0.1:8765`. Tell them:
-
-- Press **Sort with Claude** (or the space bar) to watch every photo fly into its folder. Good for screen recording. `?d=20` makes it slower.
-- **Show result** skips the animation.
-- Click any folder to browse it, click a photo to see it full size, use **Move to** to fix a wrong one, then **Build folders** in Steps to update the copies.
-- **Edit folders** adds or renames folders. After changing folders, label again.
-- **Steps** lets them redo any step with buttons, choosing folders with the Finder picker. Jev and the 200-file sample are under its **Advanced** tab.
-- The dashboard refreshes by itself when you run a step from the terminal, so they can keep it open while you work.
-- **Open sorted folder** opens the result in Finder.
-
-Then ask if anything looks wrong. If a folder has mistakes, relabel just those ids and rerun `apply.py`.
+**Labelling yourself instead of `label_claude.py`.** Run `sheets.py`; each sheet in `work/sheets/` shows 30 previews tagged with ids. `VIDEO` tags need a video folder. Write `work/labels/<name>.json` as `{"id": "key"}` for every id. Use subagents for big libraries.
 
 ## If something breaks
 
 - Port 8765 busy: `PORT=8766 ./start.sh`.
+- "claude command not found" during sorting: Claude Code isn't on PATH for the server. Restart with `./start.sh` from a terminal where `claude` works, or pick Jev under Advanced.
+- A batch failed: press Start sorting again. Finished batches are kept.
 - HEIC photos fail to open: `.venv/bin/pip install -U pillow-heif`.
-- Jev says 400 "Invalid image dimensions": the script already sends 280px images; check that `JEV_MODEL` is unset or `jev-1.14.0`.
-- Jev 401: the key in `.env` is wrong or expired.
-- A scan of a new folder clears the old labels. That is expected.
+- Jev 401: the key in `.env` is wrong. Jev 400 "Invalid image dimensions": leave `JEV_MODEL` unset.
