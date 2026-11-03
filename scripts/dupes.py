@@ -49,6 +49,8 @@ def pixels_differ(a, b):
 
 hashed = [(r["id"], r["kind"], imagehash.hex_to_hash(r["phash"])) for r in recs if r.get("phash") and "error" not in r]
 for i in range(len(hashed)):
+    if i % 50 == 0:
+        print(f"PROGRESS {i} {len(hashed)}", flush=True)
     for j in range(i + 1, len(hashed)):
         a, b = hashed[i], hashed[j]
         if a[1] != b[1] or a[2] - b[2] > 4:

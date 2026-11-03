@@ -96,6 +96,8 @@ with open(os.path.join(dest, "sorted.csv"), "w", newline="") as fc, \
         if not os.path.exists(target):
             copy(r["path"], target)
         wc.writerow([os.path.relpath(target, dest), folder, r["path"]])
+        if n % 25 == 0 or n == len(recs):
+            print(f"PROGRESS {n} {len(recs)}", flush=True)
         if n % 500 == 0:
             print(f"  copied {n}/{len(recs)}", flush=True)
 

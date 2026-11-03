@@ -11,25 +11,22 @@
 </head>
 <body>
 <header class="topbar">
-  <button class="mx-logo" id="logo" title="Photo sorter"><i data-icon="images"></i>photo sorter</button>
-  <span class="mx-pill" id="pill"><span class="dot"></span><span id="pilltext">Ready</span></span>
+  <span class="mx-logo"><i data-icon="images"></i>photo sorter</span>
+  <span class="mx-pill" id="pill"><span class="dot"></span><span id="pilltext">Loading</span></span>
   <span class="spacer"></span>
-  <div class="mx-seg" id="theme" role="group" aria-label="Theme">
-    <button data-t="light">Light</button><button data-t="dark">Dark</button><button data-t="system">System</button>
-  </div>
-  <button class="mx-btn" id="btnSteps" aria-label="Steps"><i data-icon="list"></i><span class="lbl">Steps</span></button>
-  <button class="mx-btn solid" id="go"><i data-icon="play"></i><span id="golabel">Sort with Claude</span></button>
+  <button class="mx-icon" id="theme" aria-label="Switch to dark mode"></button>
+  <button class="mx-btn" id="btnNew" hidden><i data-icon="plus"></i>New sort</button>
+  <button class="mx-btn solid" id="go"><i data-icon="play"></i><span>Sort with Claude</span></button>
 </header>
 
 <main class="app" id="app">
   <div class="mx-title">
     <h1>Sorting my camera roll</h1>
-    <span class="mx-count" id="total">0</span>
+    <span class="mx-count" id="total" hidden>0</span>
     <span class="mx-sub" id="source"></span>
     <span class="spacer"></span>
-    <button class="mx-btn small ghost" id="btnShow" title="Skip the animation">Show result</button>
     <button class="mx-btn small" id="btnFolders"><i data-icon="pencil"></i>Edit folders</button>
-    <button class="mx-btn small" id="btnOpen"><i data-icon="folder"></i>Open sorted folder</button>
+    <button class="mx-btn small" id="btnOpen" hidden><i data-icon="folder"></i>Open sorted folder</button>
   </div>
 
   <section class="mx-kpis" style="--n:6">
@@ -51,7 +48,7 @@
         <div class="mx-sub">into <b id="bigF">0 folders</b> with one prompt</div>
         <div class="chips"><span class="chip" id="chipD"></span><span class="chip" id="chipS"></span></div>
       </div>
-      <div class="center empty" id="empty"></div>
+      <div class="panel" id="panel"></div>
     </div>
     <div class="col right"><div class="col-h"><span>Videos</span><em id="vcount">0</em></div><div class="cards" id="videos"></div></div>
   </section>
