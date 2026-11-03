@@ -100,6 +100,8 @@ Run `./start.sh` in the background and give them `http://127.0.0.1:8765`. Tell t
 - **Show result** skips the animation.
 - Click any folder to browse it, click a photo to see it full size, use **Move to** to fix a wrong one, then **Build folders** in Steps to update the copies.
 - **Edit folders** adds or renames folders. After changing folders, label again.
+- **Steps** lets them redo any step with buttons, choosing folders with the Finder picker. Jev and the 200-file sample are under its **Advanced** tab.
+- The dashboard refreshes by itself when you run a step from the terminal, so they can keep it open while you work.
 - **Open sorted folder** opens the result in Finder.
 
 Then ask if anything looks wrong. If a folder has mistakes, relabel just those ids and rerun `apply.py`.

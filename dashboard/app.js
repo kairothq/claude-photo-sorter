@@ -84,11 +84,24 @@ async function load() {
   $("k-ftotal").textContent = cats.length;
   $("k-checked-s").textContent = items.length ? size(items.reduce((s, r) => s + r.bytes, 0)) + " in total" : "photos & videos";
   $("btnOpen").hidden = !S.sorted;
+  sig = signature(S);
   buildCards();
   buildSphere();
   showEmpty();
   setPill();
 }
+
+/* Live refresh: when Claude runs a step from the terminal, the page catches up by itself. */
+let sig = "";
+const signature = s => JSON.stringify([s.files, s.steps, s.sorted, s.overrides, (s.categories || []).map(c => c.key), s.job && s.job.running]);
+setInterval(async () => {
+  if (DEMO || run === "running" || $("overlay").children.length) return;
+  try {
+    const s = await fetch("/api/state", { cache: "no-store" }).then(r => r.json());
+    if (s.job && s.job.running) setPill("busy", `Running: ${s.job.step}`);
+    if (sig && signature(s) !== sig) await load();
+  } catch (e) {}
+}, 2500);
 
 /* ---------- cards ---------- */
 function card(c) {
@@ -292,43 +305,75 @@ function overlay(...nodes) { closeAll(); $("overlay").append(...nodes); paintIco
 function toast(t) { const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e.t); e.t = setTimeout(() => e.classList.remove("on"), 2800); }
 addEventListener("keydown", e => { if (e.key === "Escape" && !document.querySelector(".lightbox")) closeAll(); });
 
-/* Steps drawer: scan, duplicates, label, build */
-let poll;
+/* Steps drawer: scan, duplicates, label, build. Jev and sampling live under Advanced. */
+let poll, tab = "steps";
+const picked = { source: null, dest: null, sample: false };
+function folderPicker(key, prompt, fallback) {
+  // Mac: a button that opens the real folder picker. Elsewhere (or on request): a text box.
+  const mac = S.platform === "darwin";
+  const shown = el("div", { class: "picked" });
+  const input = el("input", { class: "field", placeholder: fallback, value: picked[key] || "", oninput: e => { picked[key] = e.target.value.trim(); paint(); } });
+  const typeLink = el("button", { class: "linkish", onclick: () => { typeLink.hidden = true; input.hidden = false; input.focus(); } }, "or type a path");
+  input.hidden = mac;
+  typeLink.hidden = !mac;
+  function paint() {
+    shown.replaceChildren(...(picked[key] ? [icon("folder"), el("span", { title: picked[key] }, picked[key].replace(/^\/Users\/[^/]+/, "~"))] : []));
+    shown.hidden = !picked[key];
+  }
+  paint();
+  const btn = mac ? el("button", { class: "mx-btn small" + (picked[key] ? "" : " solid"), onclick: async () => {
+    const r = await api("/api/pick", { prompt }).catch(() => ({}));
+    if (r.path) { picked[key] = r.path; input.value = r.path; paint(); btn.classList.remove("solid"); btn.lastChild.textContent = "Change"; }
+  } }, icon("folder"), el("span", {}, picked[key] ? "Change" : prompt.startsWith("Choose where") ? "Choose where to save" : "Choose folder")) : null;
+  return { shown, input, typeLink, btn };
+}
 function openSteps() {
   const st = S.steps || {};
-  const srcInput = el("input", { class: "field", placeholder: "/Users/you/Pictures/Camera roll", value: S.source || "" });
-  const sample = el("input", { type: "checkbox" });
-  const dest = el("input", { class: "field", placeholder: "Where to put the sorted folders", value: S.sorted || (S.source ? S.source.replace(/\/$/, "") + " (sorted)" : "") });
+  picked.source = picked.source || S.source || null;
+  picked.dest = picked.dest || S.sorted || (picked.source ? picked.source.replace(/\/$/, "") + " (sorted)" : null);
   const log = el("pre", { class: "log", id: "log" }, (S.job && S.job.log || []).join("\n") || "Output from each step shows up here.");
   const step = (n, ok, title, text, ...row) => el("div", { class: "step" + (ok ? " ok" : "") },
     el("span", { class: "n" }, ok ? icon("check") : String(n)), el("div", {}, el("b", {}, title), el("p", {}, text), el("div", { class: "row" }, row)));
   const go = (name, extra = {}) => api("/api/run", { step: name, ...extra }).then(watch).catch(() => {});
+  const src = folderPicker("source", "Choose the folder with your photos", "/Users/you/Pictures/Camera roll");
+  const dst = folderPicker("dest", "Choose where to save the sorted folders", "Where to put the sorted folders");
 
+  const steps = el("div", { style: "overflow-y:auto" },
+    step(1, st.scan, "Choose your photos", "A Google Takeout, Apple Photos export or any folder. Nothing in it is changed.",
+      el("div", { style: "width:100%" }, src.shown, src.input,
+        el("div", { class: "row" }, src.btn, src.typeLink, el("span", { style: "flex:1" }),
+          el("button", { class: "mx-btn small solid", onclick: () => picked.source ? go("scan", { source: picked.source, limit: picked.sample ? 200 : 0 }) : toast("Choose a folder first.") },
+            picked.sample ? "Scan 200" : "Scan")))),
+    step(2, st.dupes, "Find duplicates", "Burst shots, re-saved screenshots and identical copies.",
+      el("button", { class: "mx-btn small", disabled: !st.scan, onclick: () => go("dupes") }, "Find duplicates")),
+    step(3, st.label, "Label every file", "Claude looks at every photo and video and picks a folder. Free with your Claude plan.",
+      el("div", { style: "width:100%" },
+        el("p", { class: "hint" }, "In Claude Code, say ", el("code", {}, "label my photos")),
+        el("div", { class: "row" },
+          el("button", { class: "mx-btn small", onclick: () => { navigator.clipboard.writeText("label my photos"); toast("Copied. Paste it into Claude Code."); } }, icon("copy"), "Copy")))),
+    step(4, st.apply, "Build the folders", "Copies every file into its folder. Duplicates go to _Review. Originals stay where they are.",
+      el("div", { style: "width:100%" }, dst.shown, dst.input,
+        el("div", { class: "row" }, dst.btn, dst.typeLink, el("span", { style: "flex:1" }),
+          S.sorted ? el("button", { class: "mx-btn small", onclick: () => api("/api/open", {}) }, icon("folder"), "Open") : null,
+          el("button", { class: "mx-btn small solid", disabled: !st.label, onclick: () => go("apply", { dest: picked.dest || "" }) }, "Build folders")))));
+
+  const sample = el("input", { type: "checkbox", checked: picked.sample, onchange: e => { picked.sample = e.target.checked; } });
+  const advanced = el("div", { style: "overflow-y:auto" },
+    el("div", { class: "step" }, el("span", { class: "n" }, icon("images")), el("div", {},
+      el("b", {}, "Try a sample first"),
+      el("p", {}, "Scan 200 random files instead of everything, to check the folders before a big run."),
+      el("label", { class: "check-row" }, sample, "Scan only 200 files"))),
+    el("div", { class: "step" + (st.jev_labels ? " ok" : "") }, el("span", { class: "n" }, st.jev_labels ? icon("check") : "J"), el("div", {},
+      el("b", {}, "Label with Jev ", el("span", { class: "paid" }, "PAID")),
+      el("p", {}, "TypeSafe's Jev image model labels about 1,000 files a minute and is billed per file. With Claude labels too, the confident Jev answers win."),
+      el("p", { class: "hint" }, S.jev_key ? "Key found in .env." : el("span", {}, "Needs ", el("code", {}, "JEV_KEY=your-key"), " in a .env file in this folder.")),
+      el("button", { class: "mx-btn small", disabled: !st.scan || !S.jev_key, onclick: confirmJev }, "Estimate cost and run"))));
+
+  const seg = el("div", { class: "mx-seg" }, [["steps", "Steps"], ["advanced", "Advanced"]].map(([k, l]) =>
+    el("button", { "aria-pressed": tab === k, onclick: () => { tab = k; openSteps(); } }, l)));
   overlay(el("div", { class: "scrim", onclick: closeAll }), el("aside", { class: "drawer", role: "dialog", "aria-label": "Steps" },
-    el("div", { class: "fb-head" }, el("h2", {}, "Steps"), el("button", { class: "mx-icon", onclick: closeAll, "aria-label": "Close" }, icon("x"))),
-    el("div", { style: "overflow-y:auto" },
-      step(1, st.scan, "Choose your photos", "A Google Takeout, Apple Photos export or any folder. Read only.",
-        el("div", { style: "width:100%" }, srcInput,
-          el("div", { class: "row" },
-            S.platform === "darwin" ? el("button", { class: "mx-btn small", onclick: async () => { const r = await api("/api/pick", {}); if (r.path) srcInput.value = r.path; } }, icon("folder"), "Browse…") : null,
-            el("label", { class: "check-row" }, sample, "Try 200 first"),
-            el("span", { style: "flex:1" }),
-            el("button", { class: "mx-btn small solid", onclick: () => go("scan", { source: srcInput.value.trim(), limit: sample.checked ? 200 : 0 }) }, "Scan")))),
-      step(2, st.dupes, "Find duplicates", "Burst shots, re-saved screenshots and identical copies.",
-        el("button", { class: "mx-btn small", disabled: !st.scan, onclick: () => go("dupes") }, "Find duplicates")),
-      step(3, st.label, "Label every file", "Pick one. Claude is free with your Claude plan. Jev is a fast image model billed per file.",
-        el("div", { style: "width:100%" },
-          el("p", { class: "hint" }, "Claude: in your terminal say ", el("code", {}, "label my photos")),
-          el("div", { class: "row" },
-            el("button", { class: "mx-btn small", onclick: () => { navigator.clipboard.writeText("label my photos"); toast("Copied. Paste it into Claude Code."); } }, icon("copy"), "Copy"),
-            el("span", { style: "flex:1" }),
-            el("button", { class: "mx-btn small", disabled: !st.scan, onclick: confirmJev }, "Label with Jev ", el("span", { class: "paid" }, "PAID"))))),
-      step(4, st.apply, "Build the folders", "Copies every file into its folder. Duplicates go to _Review. Originals stay where they are.",
-        el("div", { style: "width:100%" }, dest,
-          el("div", { class: "row" },
-            el("span", { style: "flex:1" }),
-            S.sorted ? el("button", { class: "mx-btn small", onclick: () => api("/api/open", {}) }, icon("folder"), "Open") : null,
-            el("button", { class: "mx-btn small solid", disabled: !st.label, onclick: () => go("apply", { dest: dest.value.trim() }) }, "Build folders"))))),
+    el("div", { class: "fb-head" }, seg, el("button", { class: "mx-icon", onclick: closeAll, "aria-label": "Close" }, icon("x"))),
+    tab === "steps" ? steps : advanced,
     log));
   if (S.job && S.job.running) watch(S);
 }
