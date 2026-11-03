@@ -84,11 +84,24 @@ async function load() {
   $("k-ftotal").textContent = cats.length;
   $("k-checked-s").textContent = items.length ? size(items.reduce((s, r) => s + r.bytes, 0)) + " in total" : "photos & videos";
   $("btnOpen").hidden = !S.sorted;
+  sig = signature(S);
   buildCards();
   buildSphere();
   showEmpty();
   setPill();
 }
+
+/* Live refresh: when Claude runs a step from the terminal, the page catches up by itself. */
+let sig = "";
+const signature = s => JSON.stringify([s.files, s.steps, s.sorted, s.overrides, (s.categories || []).map(c => c.key), s.job && s.job.running]);
+setInterval(async () => {
+  if (DEMO || run === "running" || $("overlay").children.length) return;
+  try {
+    const s = await fetch("/api/state", { cache: "no-store" }).then(r => r.json());
+    if (s.job && s.job.running) setPill("busy", `Running: ${s.job.step}`);
+    if (sig && signature(s) !== sig) await load();
+  } catch (e) {}
+}, 2500);
 
 /* ---------- cards ---------- */
 function card(c) {
