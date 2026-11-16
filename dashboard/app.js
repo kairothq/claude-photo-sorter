@@ -335,7 +335,7 @@ function renderPanel() {
 
 function setupCard() {
   const box = el("div", { class: "setup mx-rise" });
-  const mac = S.platform === "darwin";
+  const mac = S.platform === "darwin" || S.platform === "win32";  // has a native folder picker
   const pathBox = (key, placeholder) => {
     const input = el("input", { class: "field", placeholder, value: pick[key] || "" });
     const use = el("button", { class: "mx-btn small solid", onclick: () => choose(key, input.value.trim()) }, "Use");

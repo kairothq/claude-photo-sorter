@@ -169,7 +169,7 @@ def run_single(step, args):
 
 def peek(source):
     """Count what is in a folder and make a few tiny previews, right after it is picked."""
-    source = os.path.expanduser(source.strip().rstrip("/"))
+    source = os.path.expanduser(source.strip().strip('"').rstrip("/\\"))  # Windows "Copy as path" adds quotes
     if not os.path.isdir(source):
         raise ValueError("That folder does not exist.")
     photos, videos, size, pics = 0, 0, 0, []
@@ -225,7 +225,15 @@ def open_path(path, reveal=False):
 
 
 def pick_folder(prompt):
-    """Native macOS folder picker, shown in front of the browser."""
+    """Native folder picker (macOS or Windows), shown in front of the browser."""
+    if sys.platform.startswith("win"):
+        ps = ("[Console]::OutputEncoding=[Text.Encoding]::UTF8; Add-Type -AssemblyName System.Windows.Forms; "
+              "$d=New-Object System.Windows.Forms.FolderBrowserDialog; $d.Description=$env:PICK_PROMPT; "
+              "$o=New-Object System.Windows.Forms.Form -Property @{TopMost=$true}; "
+              "if($d.ShowDialog($o) -eq 'OK'){$d.SelectedPath}")
+        r = subprocess.run(["powershell", "-NoProfile", "-STA", "-Command", ps], capture_output=True,
+                           env={**os.environ, "PICK_PROMPT": prompt[:120]})
+        return r.stdout.decode("utf-8", "replace").strip() or None
     if sys.platform != "darwin":
         return None
     prompt = prompt.replace('"', "'")[:120]
