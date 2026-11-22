@@ -26,7 +26,14 @@ if not claude:
 sheet_dir = os.path.join(WORK, "sheets")
 if not glob.glob(os.path.join(sheet_dir, "sheet_*.jpg")):
     subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), "sheets.py")], check=True)
-sheets = sorted(glob.glob(os.path.join(sheet_dir, "sheet_*.jpg")))
+
+def sheet_no(path):
+    return int(re.search(r"sheet_(\d+)", os.path.basename(path)).group(1))
+
+
+# Sort by number, not by name: past sheet_99 the names stop sorting in order
+# (sheet_10, sheet_100, sheet_101, sheet_11...), which mixed far-apart sheets into one batch.
+sheets = sorted(glob.glob(os.path.join(sheet_dir, "sheet_*.jpg")), key=sheet_no)
 inv = load(os.path.join(DATA, "inventory.json"))
 cats = categories()
 os.makedirs(LABELS, exist_ok=True)
@@ -38,15 +45,23 @@ if "--only" in sys.argv:
 
 
 def ids_in(batch):
-    first = int(re.search(r"sheet_(\d+)", batch[0]).group(1)) * 30
-    last = (int(re.search(r"sheet_(\d+)", batch[-1]).group(1)) + 1) * 30
-    return [str(r["id"]) for r in inv[first:last]]
+    return [str(r["id"]) for p in batch for r in inv[sheet_no(p) * 30:(sheet_no(p) + 1) * 30]]
+
+
+def labelled_so_far():
+    have = set()
+    for f in glob.glob(os.path.join(LABELS, "*.json")):
+        have |= set(load(f, {}))
+    return have
+
+
+done_before = labelled_so_far()
 
 
 def run(n, batch):
     out = os.path.join(LABELS, f"claude_{n:02d}.json")
     want = ids_in(batch)
-    if os.path.exists(out) and set(want) <= set(load(out, {})):
+    if set(want) <= done_before:  # already labelled by an earlier run, whichever file it landed in
         return n, len(want), 0.0, "cached"
     prompt = (
         "You sort a camera roll into folders. These are the folders, as key (kind): what goes in it\n"
@@ -78,7 +93,7 @@ def run(n, batch):
         except ValueError:
             labels = {}
         if len(labels) >= 0.9 * len(want):
-            save(out, labels)
+            save(out, {**load(out, {}), **labels})  # keep labels an earlier run saved under this name
             return n, len(labels), res.get("total_cost_usd", 0) or 0, f"{time.time() - t0:.0f}s" + (f", try {attempt + 1}" if attempt else "")
         why = " ".join(text.split())[:160] or (r.stderr or "").strip()[:160] or "empty answer"
         with open(os.path.join(WORK, f"claude_failed_{n:02d}.txt"), "w") as f:  # keep the raw answer for debugging
