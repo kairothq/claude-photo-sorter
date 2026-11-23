@@ -38,9 +38,9 @@ if "--only" in sys.argv:
 
 
 def ids_in(batch):
-    first = int(re.search(r"sheet_(\d+)", batch[0]).group(1)) * 30
-    last = (int(re.search(r"sheet_(\d+)", batch[-1]).group(1)) + 1) * 30
-    return [str(r["id"]) for r in inv[first:last]]
+    # per sheet: past sheet_99 the glob sorts sheet_10 next to sheet_100, so first..last isn't a range
+    nums = [int(re.search(r"sheet_(\d+)", p).group(1)) for p in batch]
+    return [str(r["id"]) for s in nums for r in inv[s * 30:(s + 1) * 30]]
 
 
 def run(n, batch):
